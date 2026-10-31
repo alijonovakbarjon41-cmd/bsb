@@ -102,27 +102,27 @@
         <div class="stages-inputs-flex">
           <div class="stage-input-cell">
             <label>1-bosqich</label>
-            <input type="number" id="maxStage1" class="text-input tabular-nums" min="1" max="50" value="12">
+            <input type="number" id="maxStage1" class="text-input tabular-nums" min="1" max="50" value="10">
           </div>
           <div class="stage-input-cell">
             <label>2-bosqich</label>
-            <input type="number" id="maxStage2" class="text-input tabular-nums" min="1" max="50" value="12">
+            <input type="number" id="maxStage2" class="text-input tabular-nums" min="1" max="50" value="10">
           </div>
           <div class="stage-input-cell">
             <label>3-bosqich</label>
             <input type="number" id="maxStage3" class="text-input tabular-nums" min="1" max="50" value="10">
           </div>
-          <div class="stage-input-cell limit-locked" title="Qoidaga muvofiq maksimal 8 ball">
-            <label>4-bosqich (maks. 8)</label>
-            <input type="number" id="maxStage4" class="text-input tabular-nums" min="1" max="8" value="8">
+          <div class="stage-input-cell limit-locked" title="Har bir bosqich maks. 10, odatda maks. 8">
+            <label>4-bosqich (maks. 10)</label>
+            <input type="number" id="maxStage4" class="text-input tabular-nums" min="1" max="50" value="10">
           </div>
-          <div class="stage-input-cell limit-locked" title="Qoidaga muvofiq maksimal 8 ball">
-            <label>5-bosqich (maks. 8)</label>
-            <input type="number" id="maxStage5" class="text-input tabular-nums" min="1" max="8" value="8">
+          <div class="stage-input-cell limit-locked" title="Har bir bosqich maks. 10, odatda maks. 8">
+            <label>5-bosqich (maks. 10)</label>
+            <input type="number" id="maxStage5" class="text-input tabular-nums" min="1" max="50" value="10">
           </div>
         </div>
         <div class="input-caption" style="margin-top: 8px;">
-          * 4 va 5-bosqich ballari maksimal 8 ball chegarasidan oshmaydi. Jami ball qo'shilganda qolgan ballar oldingi bosqichlarga proportsional taqsimlanadi.
+          * Har bir bosqich maksimal 10 ball. Standart holatda (jami ball &le; 46) 4 va 5-bosqichlar 8 dan oshmaydi. Jami ball 47-50 bo'lganda (boshqa bosqichlar 10 dan oshib ketmasligi uchun) 4 va 5-bosqichlar 9 yoki 10 gacha oshishi mumkin.
         </div>
       </div>
     </section>
@@ -223,8 +223,8 @@
 
         <div class="input-block">
           <label class="input-label" for="quickScoreInput">Jami to'plangan ball</label>
-          <input type="number" id="quickScoreInput" class="text-input tabular-nums" placeholder="0 - 50" min="0" max="100" inputmode="numeric" required>
-          <span class="input-caption">5 ta bosqich tasodifiy taqsimlanadi (4 va 5-bosqich &le; 8)</span>
+          <input type="number" id="quickScoreInput" class="text-input tabular-nums" placeholder="0 - 50" min="0" max="50" inputmode="numeric" required>
+          <span class="input-caption">Bosqichlar maks. 10 ball (4 va 5-bosqich odatda &le; 8, jami 47-50 da 10 gacha)</span>
         </div>
 
         <button type="submit" class="btn btn-primary" style="height: 38px;">
@@ -298,11 +298,11 @@
             <tr class="head-max-scores">
               <td></td>
               <td></td>
-              <td id="tblHeaderMax1" class="tabular-nums">12</td>
-              <td id="tblHeaderMax2" class="tabular-nums">12</td>
+              <td id="tblHeaderMax1" class="tabular-nums">10</td>
+              <td id="tblHeaderMax2" class="tabular-nums">10</td>
               <td id="tblHeaderMax3" class="tabular-nums">10</td>
-              <td id="tblHeaderMax4" class="tabular-nums">8</td>
-              <td id="tblHeaderMax5" class="tabular-nums">8</td>
+              <td id="tblHeaderMax4" class="tabular-nums">10</td>
+              <td id="tblHeaderMax5" class="tabular-nums">10</td>
               <td id="tblHeaderMaxTotal" class="tabular-nums font-bold">50</td>
               <td class="tabular-nums font-bold">100</td>
               <td class="no-print"></td>

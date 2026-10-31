@@ -12,8 +12,9 @@ Umumiy o'rta ta'lim maktablari o'qituvchilari uchun BSB (Baholash / Nazorat ishl
 
 2. **O'quvchi Kiritish va Bosqichlar Taqsimoti**:
    - O'qituvchi faqat o'quvchining F.I.O va Jami ballini kiritadi.
-   - 1-dan 5-gacha bo'lgan bosqich ballari avtomatik ravishda tasodifiy (random) proporsional taqsimlanadi.
-   - **Cheklov**: 4- va 5-bosqich ballari maksimal **8 balldan oshmaydi**.
+   - Barcha 5 ta bosqichning har biri maksimal **10 ball** (Jami = 50 ball). Hech qaysi bosqich 10 dan oshmaydi.
+   - **Standart holatlarda (jami ball &le; 46)**: 4- va 5-bosqich ballari maksimal **8 balldan oshmaydi**.
+   - **Yuqori ballarda (jami ball 47, 48, 49, 50)**: Boshqa bosqichlar 10 dan oshib ketmasligi uchun 4 va 5-bosqichlar 8 dan oshib, 9 yoki 10 gacha ko'tarilishi mumkin (masalan, 49 ball bo'lsa: 10, 10, 10, 10, 9 yoki 10, 10, 10, 9, 10; 50 ball bo'lsa: 10, 10, 10, 10, 10).
    - 5 ta bosqich yig'indisi har doim kiritilgan Jami ballga qat'iy teng bo'ladi.
    - Istalgan vaqtda har bir o'quvchi yoki barcha o'quvchilar uchun bosqichlarni qayta taqsimlash mumkin.
 

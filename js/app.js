@@ -1,6 +1,11 @@
 /**
  * BSB Baholash Tizimi - Korporativ Dastur Logikasi
- * Modul: Hisob-kitoblar, Random taqsimot, Holat boshqaruvi, Mavzu (Dark/Light)
+ * Yangilangan mantiq:
+ * 1. Har bir bosqich maksimal 10 ball (barcha 5 ta bosqich max = 10, jami = 50)
+ * 2. Standart holatlarda (jami ball <= 46) 4 va 5-bosqichlar 8 dan oshmaydi
+ * 3. Jami ball 46 dan oshganda (47, 48, 49, 50 ball) yoki bosqichlar 10 dan oshib ketmasligi uchun
+ *    4 va 5-bosqich ballari 8 dan oshib, 9 yoki 10 gacha chiqishi mumkin (masalan, 49 -> 10, 10, 10, 10, 9; 50 -> 10, 10, 10, 10, 10)
+ * 4. Hech qaysi bosqich hech qachon 10 balldan oshmaydi!
  */
 
 (function () {
@@ -18,14 +23,14 @@
       methodLeader: "Boboyeva N.",
       teacherName: "Shodmonqulova M."
     },
-    // Bosqichlar maksimal ballari (4 va 5-bosqichlar 8 dan oshmaydi)
-    maxScores: [12, 12, 10, 8, 8],
-    students: [], // Default holatda bo'sh (soxta o'quvchilarsiz)
+    // Har bir bosqich maksimal 10 ball (Jami = 50 ball)
+    maxScores: [10, 10, 10, 10, 10],
+    students: [], // Default holatda bo'sh
     statistics: null,
     theme: "light"
   };
 
-  const STORAGE_KEY = "bsb_enterprise_state_v2";
+  const STORAGE_KEY = "bsb_enterprise_state_v3";
   const THEME_KEY = "bsb_theme_preference";
 
   // ============================================================
@@ -70,44 +75,90 @@
   }
 
   // ============================================================
-  // 2. RANDOM BALLAR TAQSIMOTI ALGORITMI
+  // 2. YANGILANGAN RANDOM TAQSIMOT ALGORITMI
   // ============================================================
   /**
    * Jami ballni 5 ta bosqichga tasodifiy taqsimlaydi:
-   * - 4 va 5-bosqich ballari maksimal 8 dan oshmaydi (s4 <= 8, s5 <= 8)
-   * - s1 + s2 + s3 + s4 + s5 = Jami ball (qat'iy tenglik)
-   * - Tabiiy pedagogik proporsiya bilan butun sonlar hosil qilinadi
+   * - Har bir bosqichning mutlaq maksimal qiymati 10 ball (maxScores[i])
+   * - Odatdagi holatlarda (jami <= 46): 4 va 5-bosqich ballari maksimal 8 dan oshmaydi (s4 <= 8, s5 <= 8)
+   * - Agar jami ball 46 dan oshsa (47, 48, 49, 50): boshqa bosqichlar 10 dan oshib ketmasligi uchun
+   *   4 va 5-bosqichlar 8 dan oshib, 9 yoki 10 gacha ruxsat etiladi
+   * - Jami ball = 50 bo'lganda: [10, 10, 10, 10, 10]
+   * - Jami ball = 49 bo'lganda: [10, 10, 10, 10, 9] yoki [10, 10, 10, 9, 10]
+   * - Butun sonlar va s1 + s2 + s3 + s4 + s5 = jami ball qat'iy saqlanadi
    */
   function distributeScore(total, maxScores) {
-    const effectiveMaxes = [
+    const m = [
       Math.max(1, Number(maxScores[0]) || 10),
       Math.max(1, Number(maxScores[1]) || 10),
       Math.max(1, Number(maxScores[2]) || 10),
-      Math.min(8, Math.max(1, Number(maxScores[3]) || 8)), // 4-bosqich max 8
-      Math.min(8, Math.max(1, Number(maxScores[4]) || 8))  // 5-bosqich max 8
+      Math.max(1, Number(maxScores[3]) || 10),
+      Math.max(1, Number(maxScores[4]) || 10)
     ];
 
-    const maxTotal = effectiveMaxes.reduce((a, b) => a + b, 0);
-    const clampedTotal = Math.max(0, Math.min(Number(total) || 0, maxTotal));
+    const totalMax = m.reduce((a, b) => a + b, 0); // Odatda 50
+    const clampedTotal = Math.max(0, Math.min(Number(total) || 0, totalMax));
 
     if (clampedTotal === 0) {
       return [0, 0, 0, 0, 0];
     }
-    if (clampedTotal === maxTotal) {
-      return [...effectiveMaxes];
+    if (clampedTotal === totalMax) {
+      return [...m]; // [10, 10, 10, 10, 10]
     }
 
-    const ratio = clampedTotal / maxTotal;
+    // Standart holatda 4 va 5-bosqichlar uchun chegara (8 ball)
+    const stdLimit4 = Math.min(m[3], 8);
+    const stdLimit5 = Math.min(m[4], 8);
+    const standardSum = m[0] + m[1] + m[2] + stdLimit4 + stdLimit5; // masalan 10 + 10 + 10 + 8 + 8 = 46
+
+    let effectiveLimits;
+
+    if (clampedTotal <= standardSum) {
+      // 46 yoki undan kam bo'lsa: 4 va 5-bosqichlar QAT'IY 8 dan oshmaydi!
+      effectiveLimits = [m[0], m[1], m[2], stdLimit4, stdLimit5];
+    } else {
+      // 46 dan oshsa (47, 48, 49): oshib ketgan ballar 4 va 5-bosqichlarga o'tadi (10 gacha)
+      const excess = clampedTotal - standardSum; // 47 da 1, 48 da 2, 49 da 3
+      const canAbsorb4 = m[3] - stdLimit4; // 10 - 8 = 2
+      const canAbsorb5 = m[4] - stdLimit5; // 10 - 8 = 2
+
+      // Ortiqcha ballarni 4 va 5-bosqich o'rtasida tasodifiy taqsimlaymiz
+      let add4 = 0;
+      let add5 = 0;
+      for (let i = 0; i < excess; i++) {
+        if (add4 < canAbsorb4 && add5 < canAbsorb5) {
+          if (Math.random() < 0.5) add4++;
+          else add5++;
+        } else if (add4 < canAbsorb4) {
+          add4++;
+        } else if (add5 < canAbsorb5) {
+          add5++;
+        }
+      }
+
+      effectiveLimits = [
+        m[0],
+        m[1],
+        m[2],
+        stdLimit4 + add4,
+        stdLimit5 + add5
+      ];
+    }
+
+    // Proportsional boshlang'ich taqsimot
+    const effSum = effectiveLimits.reduce((a, b) => a + b, 0);
+    const ratio = clampedTotal / effSum;
     const scores = [];
 
     for (let i = 0; i < 5; i++) {
-      const m = effectiveMaxes[i];
-      const jitter = (Math.random() * 3.2) - 1.6;
-      let val = Math.round(ratio * m + jitter);
-      val = Math.max(0, Math.min(m, val));
+      const lim = effectiveLimits[i];
+      const jitter = (Math.random() * 2.4) - 1.2;
+      let val = Math.round(ratio * lim + jitter);
+      val = Math.max(0, Math.min(lim, val));
       scores.push(val);
     }
 
+    // Yig'indi va farqni to'g'irlash
     let diff = clampedTotal - scores.reduce((a, b) => a + b, 0);
     let attempts = 0;
 
@@ -116,7 +167,7 @@
       if (diff > 0) {
         const candidates = [];
         for (let i = 0; i < 5; i++) {
-          if (scores[i] < effectiveMaxes[i]) {
+          if (scores[i] < effectiveLimits[i]) {
             candidates.push(i);
           }
         }
@@ -138,9 +189,10 @@
       }
     }
 
-    // Yakuniy qat'iy tekshiruv (4 va 5-bosqich ballari maksimal 8)
-    scores[3] = Math.min(scores[3], 8);
-    scores[4] = Math.min(scores[4], 8);
+    // Yakuniy nazorat: hech bir bosqich 10 dan oshmasligi kafolatlanadi
+    for (let i = 0; i < 5; i++) {
+      scores[i] = Math.min(scores[i], m[i]);
+    }
 
     return scores;
   }
@@ -204,8 +256,8 @@
     const percentAverage = Math.round((percentSum / studentCount) * 100) / 100;
 
     const stagePercentages = stageAverages.map((avg, i) => {
-      const m = state.maxScores[i] || 1;
-      return Math.round((avg / m) * 10000) / 100;
+      const maxVal = state.maxScores[i] || 10;
+      return Math.round((avg / maxVal) * 10000) / 100;
     });
 
     const qualityPercent = Math.round(((grades.excellent + grades.good) / studentCount) * 1000) / 10;
@@ -356,10 +408,10 @@
           <input type="number" min="0" max="${state.maxScores[2]}" class="cell-edit-input text-center tabular-nums" value="${student.scores[2]}" data-field="stage" data-stage="2" data-index="${index}" />
         </td>
         <td class="col-score-stage">
-          <input type="number" min="0" max="${Math.min(state.maxScores[3], 8)}" class="cell-edit-input text-center tabular-nums" value="${student.scores[3]}" data-field="stage" data-stage="3" data-index="${index}" title="4-bosqich maks. 8" />
+          <input type="number" min="0" max="${state.maxScores[3]}" class="cell-edit-input text-center tabular-nums" value="${student.scores[3]}" data-field="stage" data-stage="3" data-index="${index}" title="4-bosqich balli (maks. 10)" />
         </td>
         <td class="col-score-stage">
-          <input type="number" min="0" max="${Math.min(state.maxScores[4], 8)}" class="cell-edit-input text-center tabular-nums" value="${student.scores[4]}" data-field="stage" data-stage="4" data-index="${index}" title="5-bosqich maks. 8" />
+          <input type="number" min="0" max="${state.maxScores[4]}" class="cell-edit-input text-center tabular-nums" value="${student.scores[4]}" data-field="stage" data-stage="4" data-index="${index}" title="5-bosqich balli (maks. 10)" />
         </td>
         <td class="col-score-total">
           <input type="number" min="0" max="${maxTotal}" class="cell-edit-input text-center bold-score tabular-nums" value="${student.total}" data-field="total" data-index="${index}" title="Jami ballni o'zgartirsangiz bosqichlar qayta random taqsimlanadi" />
@@ -534,10 +586,7 @@
       renderAll();
     } else if (field === "stage") {
       const stageIdx = parseInt(target.dataset.stage, 10);
-      let maxVal = state.maxScores[stageIdx];
-      if (stageIdx === 3 || stageIdx === 4) {
-        maxVal = Math.min(maxVal, 8);
-      }
+      let maxVal = state.maxScores[stageIdx] || 10;
 
       let val = parseInt(target.value, 10);
       if (isNaN(val) || val < 0) val = 0;
@@ -554,13 +603,7 @@
 
   function handleMaxScoreChange(stageIndex, val) {
     let num = parseInt(val, 10) || 1;
-    if (stageIndex === 3 || stageIndex === 4) {
-      if (num > 8) {
-        num = 8;
-        document.getElementById(`maxStage${stageIndex + 1}`).value = 8;
-        showToast(`${stageIndex + 1}-bosqich balli qoidaga binoan maksimal 8 bo'lishi belgilangan`);
-      }
-    }
+    if (num > 50) num = 50;
 
     state.maxScores[stageIndex] = num;
 
@@ -627,7 +670,7 @@
         methodLeader: "Boboyeva N.",
         teacherName: "Shodmonqulova M"
       };
-      state.maxScores = [12, 12, 10, 8, 8];
+      state.maxScores = [10, 10, 10, 10, 10];
 
       const rawList = [
         { name: "Abduazizova Ro’zigul", total: 39 },
@@ -670,7 +713,7 @@
         methodLeader: "Boboyeva. N",
         teacherName: "Xolmatov. O"
       };
-      state.maxScores = [12, 12, 10, 8, 8];
+      state.maxScores = [10, 10, 10, 10, 10];
 
       const rawList = [
         { name: "Abdunabiyev Z", total: 45 },
@@ -729,8 +772,6 @@
         if (parsed.schoolInfo) state.schoolInfo = Object.assign(state.schoolInfo, parsed.schoolInfo);
         if (parsed.maxScores && Array.isArray(parsed.maxScores)) {
           state.maxScores = parsed.maxScores;
-          state.maxScores[3] = Math.min(state.maxScores[3], 8);
-          state.maxScores[4] = Math.min(state.maxScores[4], 8);
         }
         if (parsed.students && Array.isArray(parsed.students)) {
           state.students = parsed.students;
@@ -788,16 +829,13 @@
   // 8. TADBIRLARNI BOG'LASH
   // ============================================================
   function initEventListeners() {
-    // Tungi / Yorug' rejim tugmasi
     document.getElementById("btnThemeToggle")?.addEventListener("click", toggleTheme);
 
-    // O'quvchi qo'shish shakli
     const formQuickAdd = document.getElementById("quickAddForm");
     if (formQuickAdd) {
       formQuickAdd.addEventListener("submit", handleAddStudent);
     }
 
-    // Jadval ichidagi amallar
     const tblBody = document.getElementById("studentsTableBody");
     if (tblBody) {
       tblBody.addEventListener("input", handleTableInput);
@@ -811,7 +849,6 @@
       });
     }
 
-    // Bosqich maksimal ballari
     for (let i = 0; i < 5; i++) {
       const input = document.getElementById(`maxStage${i + 1}`);
       if (input) {
@@ -819,7 +856,6 @@
       }
     }
 
-    // Maktab ma'lumotlari
     const schoolInputs = [
       { id: "inputSchoolName", key: "schoolName" },
       { id: "inputQuarter", key: "quarter" },
@@ -837,15 +873,12 @@
       }
     });
 
-    // Asosiy tugmalar
     document.getElementById("btnRerollAll")?.addEventListener("click", handleRerollAll);
     document.getElementById("btnClearAll")?.addEventListener("click", handleClearAll);
 
-    // Namunalar yuklash
     document.getElementById("btnPresetTabiiy")?.addEventListener("click", () => loadPreset("tabiiy5"));
     document.getElementById("btnPresetTarbiya")?.addEventListener("click", () => loadPreset("tarbiya9"));
 
-    // Eksport
     document.getElementById("btnExportExcel")?.addEventListener("click", () => {
       if (state.students.length === 0) {
         showToast("Eksport qilish uchun avval o'quvchilarni kiriting");
@@ -887,7 +920,6 @@
 
     document.getElementById("btnPrint")?.addEventListener("click", () => window.print());
 
-    // Bulk modal
     document.getElementById("btnOpenBulkModal")?.addEventListener("click", () => {
       openModal("bulkModal");
       document.getElementById("bulkTextarea")?.focus();
@@ -901,7 +933,6 @@
       document.getElementById("bulkTextarea").value = "";
     });
 
-    // Sozlamalar paneli toggle
     document.getElementById("btnToggleSettings")?.addEventListener("click", () => {
       const drawer = document.getElementById("settingsDrawer");
       if (drawer) {
@@ -911,14 +942,12 @@
       }
     });
 
-    // Modal tashqarisiga bosganda yopish
     window.addEventListener("click", e => {
       if (e.target.classList.contains("modal-backdrop")) {
         e.target.classList.remove("active");
       }
     });
 
-    // Escape tugmasi bilan modalni yopish
     window.addEventListener("keydown", e => {
       if (e.key === "Escape") {
         closeModal("bulkModal");
@@ -933,7 +962,6 @@
     initTheme();
     initEventListeners();
     loadFromStorage();
-    // DIQQAT: Default holatda soxta o'quvchilar qo'shilmaydi! Jadval toza ochiladi.
     renderAll();
   });
 
