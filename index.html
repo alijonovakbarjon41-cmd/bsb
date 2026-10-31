@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BSB Baholash Tizimi - Boshqaruv Paneli</title>
+  <meta name="description" content="Umumiy o'rta ta'lim maktablari o'qituvchilari uchun BSB baholash, tahlil va Excel hisobotlarini avtomatlashtirish tizimi.">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+</head>
+<body>
+
+  <!-- ================= KORPORATIV HEADER ================= -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-mark">BSB</div>
+        <div class="brand-info">
+          <div class="brand-title">
+            Baholash Tahlil Tizimi
+            <span class="brand-badge">Pro v2.0</span>
+          </div>
+          <div class="brand-subtitle">Mirzaobod tumani 14-maktab va o'qituvchilar uchun</div>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="save-pill" title="Ma'lumotlar avtomatik saqlanmoqda">
+          <span class="save-pill-dot"></span>
+          <span>Saqlangan: <strong id="saveIndicatorTime" class="tabular-nums">--:--</strong></span>
+        </div>
+
+        <button id="btnThemeToggle" class="btn btn-default btn-sm" type="button">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <span class="btn-label-text">Tungi rejim</span>
+        </button>
+
+        <button id="btnToggleSettings" class="btn btn-default btn-sm" type="button">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+          <span>Sozlamalar</span>
+        </button>
+
+        <button id="btnExportExcel" class="btn btn-success btn-sm" type="button">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Excel (.xlsx) yuklash</span>
+        </button>
+
+        <button id="btnPrint" class="btn btn-default btn-sm" type="button">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          <span>Chop etish</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= ASOSIY MAZMUN ================= -->
+  <main class="app-main">
+
+    <!-- SOZLAMALAR PANEL (DRAWER) -->
+    <section id="settingsDrawer" class="panel-card settings-drawer no-print">
+      <div class="settings-form-grid">
+        <div class="input-block">
+          <label class="input-label">Muassasa nomi</label>
+          <input type="text" id="inputSchoolName" class="text-input" value="Mirzaobod tumani 14-maktab">
+        </div>
+        <div class="input-block">
+          <label class="input-label">Chorak</label>
+          <input type="text" id="inputQuarter" class="text-input" value="1">
+        </div>
+        <div class="input-block">
+          <label class="input-label">BSB tartib raqami</label>
+          <input type="text" id="inputBsbNumber" class="text-input" value="1">
+        </div>
+        <div class="input-block">
+          <label class="input-label">O'quv yili</label>
+          <input type="text" id="inputAcademicYear" class="text-input" value="2025-2026">
+        </div>
+        <div class="input-block">
+          <label class="input-label">Sinf</label>
+          <input type="text" id="inputClassName" class="text-input" value="5">
+        </div>
+        <div class="input-block">
+          <label class="input-label">Fan nomi</label>
+          <input type="text" id="inputSubject" class="text-input" value="Tabiiy fan">
+        </div>
+        <div class="input-block">
+          <label class="input-label">Metod birlashma rahbari</label>
+          <input type="text" id="inputMethodLeader" class="text-input" value="Boboyeva N.">
+        </div>
+        <div class="input-block">
+          <label class="input-label">Fan o'qituvchisi</label>
+          <input type="text" id="inputTeacherName" class="text-input" value="Shodmonqulova M.">
+        </div>
+      </div>
+
+      <!-- BOSQICHLARNING MAKSIMAL BALLARI -->
+      <div class="stages-bounds-card">
+        <div class="stages-bounds-header">
+          <span>Bosqichlar bo'yicha maksimal ballar taqsimoti</span>
+          <span id="totalMaxBadge" class="brand-badge">Jami: 50 ball (100%)</span>
+        </div>
+        <div class="stages-inputs-flex">
+          <div class="stage-input-cell">
+            <label>1-bosqich</label>
+            <input type="number" id="maxStage1" class="text-input tabular-nums" min="1" max="50" value="12">
+          </div>
+          <div class="stage-input-cell">
+            <label>2-bosqich</label>
+            <input type="number" id="maxStage2" class="text-input tabular-nums" min="1" max="50" value="12">
+          </div>
+          <div class="stage-input-cell">
+            <label>3-bosqich</label>
+            <input type="number" id="maxStage3" class="text-input tabular-nums" min="1" max="50" value="10">
+          </div>
+          <div class="stage-input-cell limit-locked" title="Qoidaga muvofiq maksimal 8 ball">
+            <label>4-bosqich (maks. 8)</label>
+            <input type="number" id="maxStage4" class="text-input tabular-nums" min="1" max="8" value="8">
+          </div>
+          <div class="stage-input-cell limit-locked" title="Qoidaga muvofiq maksimal 8 ball">
+            <label>5-bosqich (maks. 8)</label>
+            <input type="number" id="maxStage5" class="text-input tabular-nums" min="1" max="8" value="8">
+          </div>
+        </div>
+        <div class="input-caption" style="margin-top: 8px;">
+          * 4 va 5-bosqich ballari maksimal 8 ball chegarasidan oshmaydi. Jami ball qo'shilganda qolgan ballar oldingi bosqichlarga proportsional taqsimlanadi.
+        </div>
+      </div>
+    </section>
+
+    <!-- STATISTIKA DASHBOARDI -->
+    <section class="stats-container">
+      <div class="stat-item">
+        <div class="stat-meta">
+          <span class="stat-title">O'quvchilar</span>
+          <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div id="statCount" class="stat-figure tabular-nums">0</div>
+        <div class="stat-subtext">Ro'yxatdagi jami soni</div>
+      </div>
+
+      <div class="stat-item">
+        <div class="stat-meta">
+          <span class="stat-title">O'rtacha ball</span>
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <div id="statAvgScore" class="stat-figure tabular-nums">0.0</div>
+        <div class="stat-subtext">Sinf bo'yicha jami ball</div>
+      </div>
+
+      <div class="stat-item">
+        <div class="stat-meta">
+          <span class="stat-title">O'rtacha foiz</span>
+          <svg class="icon" viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>
+        </div>
+        <div id="statAvgPercent" class="stat-figure tabular-nums">0.0%</div>
+        <div class="stat-subtext">Umumiy ko'rsatkich</div>
+      </div>
+
+      <div class="stat-item">
+        <div class="stat-meta">
+          <span class="stat-title">Sifat foizi</span>
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        </div>
+        <div id="statQuality" class="stat-figure tabular-nums">0.0%</div>
+        <div class="stat-subtext">4 va 5 baholar ulushi</div>
+      </div>
+
+      <div class="stat-item">
+        <div class="stat-meta">
+          <span class="stat-title">O'zlashtirish</span>
+          <svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <div id="statMastery" class="stat-figure tabular-nums">0.0%</div>
+        <div class="stat-subtext">3, 4 va 5 baholar ulushi</div>
+      </div>
+
+      <!-- Baholar analitikasi -->
+      <div class="stat-item-grades">
+        <div class="grades-summary-label">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span>Baholar taqsimoti tahlili:</span>
+        </div>
+        <div class="grades-chips-group">
+          <span class="grade-chip chip-5">
+            <span class="grade-chip-label">A'lo (5):</span>
+            <span id="statGrade5" class="grade-chip-count tabular-nums">0</span>
+          </span>
+          <span class="grade-chip chip-4">
+            <span class="grade-chip-label">Yaxshi (4):</span>
+            <span id="statGrade4" class="grade-chip-count tabular-nums">0</span>
+          </span>
+          <span class="grade-chip chip-3">
+            <span class="grade-chip-label">Qoniqarli (3):</span>
+            <span id="statGrade3" class="grade-chip-count tabular-nums">0</span>
+          </span>
+          <span class="grade-chip chip-2">
+            <span class="grade-chip-label">Qoniqarsiz (2):</span>
+            <span id="statGrade2" class="grade-chip-count tabular-nums">0</span>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- O'QUVCHI KIRITISH PANEL -->
+    <section class="panel-card entry-panel no-print">
+      <div class="entry-panel-header">
+        <div class="section-heading">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>O'quvchi qo'shish va avtomatik bosqichlar taqsimoti</span>
+        </div>
+        <button id="btnOpenBulkModal" class="btn btn-default btn-sm" type="button">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <span>Ro'yxatdan nusxalab qo'shish</span>
+        </button>
+      </div>
+
+      <form id="quickAddForm" class="entry-form-grid" autocomplete="off">
+        <div class="input-block">
+          <label class="input-label" for="quickFioInput">O'quvchi familiyasi va ismi (F.I.O)</label>
+          <input type="text" id="quickFioInput" class="text-input" placeholder="Masalan: Karimova Dilnoza" required autofocus>
+          <span class="input-caption">To'liq ism-familiyani kiriting</span>
+        </div>
+
+        <div class="input-block">
+          <label class="input-label" for="quickScoreInput">Jami to'plangan ball</label>
+          <input type="number" id="quickScoreInput" class="text-input tabular-nums" placeholder="0 - 50" min="0" max="100" inputmode="numeric" required>
+          <span class="input-caption">5 ta bosqich tasodifiy taqsimlanadi (4 va 5-bosqich &le; 8)</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="height: 38px;">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+          <span>Qo'shish (Enter)</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- ASBOBLAR PANELI (TOOLBAR) -->
+    <section class="toolbar-container no-print">
+      <div class="toolbar-group">
+        <button id="btnRerollAll" class="btn btn-default btn-sm" type="button" title="Barcha o'quvchilar uchun bosqich ballarini qayta tasodifiy taqsimlash">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          <span>Qayta taqsimlash</span>
+        </button>
+
+        <button id="btnClearAll" class="btn btn-danger btn-sm" type="button" title="Ro'yxatni tozalash">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          <span>Jadvalni tozalash</span>
+        </button>
+
+        <div class="toolbar-separator"></div>
+
+        <button id="btnExportOfflineXls" class="btn btn-default btn-sm" type="button" title="Formulali Offline Excel fayl">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
+          <span>Offline Excel (.xls)</span>
+        </button>
+
+        <button id="btnExportCSV" class="btn btn-default btn-sm" type="button" title="CSV ma'lumotlar fayli">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+          <span>CSV</span>
+        </button>
+      </div>
+
+      <div class="toolbar-group">
+        <span class="input-caption" style="margin-right: 4px;">Namunalar:</span>
+        <button id="btnPresetTabiiy" class="btn btn-default btn-sm" type="button">5-sinf (Tabiiy fan)</button>
+        <button id="btnPresetTarbiya" class="btn btn-default btn-sm" type="button">9-sinf (Tarbiya va huquq)</button>
+      </div>
+    </section>
+
+    <!-- ================= ASOSIY BAHOLASH JADVALI ================= -->
+    <section class="table-wrapper">
+      <div class="table-header-meta">
+        <div id="tableLiveTitle" class="meta-doc-title">
+          Mirzaobod tumani 14-maktab  1- Chorak 1-BSB bo'yicha tahlil  (2025-2026 o'quv yili)
+        </div>
+        <div id="tableClassSubject" class="meta-doc-details">
+          <span>Sinf: <strong>5</strong></span> • <span>Fan: <strong>Tabiiy fan</strong></span>
+        </div>
+      </div>
+
+      <div class="table-scrollable">
+        <table class="data-table">
+          <thead>
+            <!-- 1-sarlavha qatori: Ustun nomlari -->
+            <tr class="head-primary">
+              <th class="col-index">№</th>
+              <th class="col-name">F.I.O</th>
+              <th class="col-score-stage">1</th>
+              <th class="col-score-stage">2</th>
+              <th class="col-score-stage">3</th>
+              <th class="col-score-stage">4</th>
+              <th class="col-score-stage">5</th>
+              <th class="col-score-total">Jami ball</th>
+              <th class="col-percent-badge">Foiz %</th>
+              <th class="col-row-actions no-print">Amallar</th>
+            </tr>
+            <!-- 2-sarlavha qatori: Maksimal ballar -->
+            <tr class="head-max-scores">
+              <td></td>
+              <td></td>
+              <td id="tblHeaderMax1" class="tabular-nums">12</td>
+              <td id="tblHeaderMax2" class="tabular-nums">12</td>
+              <td id="tblHeaderMax3" class="tabular-nums">10</td>
+              <td id="tblHeaderMax4" class="tabular-nums">8</td>
+              <td id="tblHeaderMax5" class="tabular-nums">8</td>
+              <td id="tblHeaderMaxTotal" class="tabular-nums font-bold">50</td>
+              <td class="tabular-nums font-bold">100</td>
+              <td class="no-print"></td>
+            </tr>
+          </thead>
+
+          <!-- Dinamik o'quvchilar ro'yxati -->
+          <tbody id="studentsTableBody">
+            <!-- JavaScript orqali boshqariladi (Default bo'sh holat) -->
+          </tbody>
+
+          <!-- Pastki xulosa qatorlari -->
+          <tfoot>
+            <!-- O'rtacha ball -->
+            <tr id="rowAverageScore" class="tfoot-summary-row tfoot-avg-row">
+              <td colspan="2" style="text-align: left; padding-left: 14px;">O'rtacha ball</td>
+              <td id="avgScoreStage1" class="text-center tabular-nums">0.00</td>
+              <td id="avgScoreStage2" class="text-center tabular-nums">0.00</td>
+              <td id="avgScoreStage3" class="text-center tabular-nums">0.00</td>
+              <td id="avgScoreStage4" class="text-center tabular-nums">0.00</td>
+              <td id="avgScoreStage5" class="text-center tabular-nums">0.00</td>
+              <td id="avgScoreTotal" class="text-center tabular-nums font-bold">0.00</td>
+              <td id="avgScorePercent" class="text-center tabular-nums font-bold">0.00%</td>
+              <td class="no-print"></td>
+            </tr>
+
+            <!-- O'rtacha ko'rsatkich % da -->
+            <tr id="rowAveragePercent" class="tfoot-summary-row tfoot-pct-row">
+              <td colspan="2" style="text-align: left; padding-left: 14px;">O`rtacha ko`rsatkich % da</td>
+              <td id="avgPctStage1" class="text-center tabular-nums">0.0%</td>
+              <td id="avgPctStage2" class="text-center tabular-nums">0.0%</td>
+              <td id="avgPctStage3" class="text-center tabular-nums">0.0%</td>
+              <td id="avgPctStage4" class="text-center tabular-nums">0.0%</td>
+              <td id="avgPctStage5" class="text-center tabular-nums">0.0%</td>
+              <td></td>
+              <td></td>
+              <td class="no-print"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Pastki imzolar bloki -->
+      <div class="table-signatures-section">
+        <div class="signature-row-item">
+          <span class="signature-role">Metod birlashma rahbari:</span>
+          <span id="sigMethodLeader" class="signature-line-name">Boboyeva N.</span>
+        </div>
+        <div class="signature-row-item">
+          <span class="signature-role">Fan o`qituvchi:</span>
+          <span id="sigTeacherName" class="signature-line-name">Shodmonqulova M.</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= OMMANIY QO'SHISH MODAL OYNASI ================= -->
+  <div id="bulkModal" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header-bar">
+        <div class="modal-dialog-title">O'quvchilar ro'yxatidan nusxalab qo'shish</div>
+        <button id="btnCloseBulkModal" class="row-action-btn" type="button" aria-label="Yopish">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-content-area">
+        <p class="input-caption" style="margin-bottom: 8px;">
+          Ro'yxatni Word, Kundalik.com yoki Telegramdan nusxalab bu yerga joylang. Har bir qatorda bitta o'quvchi F.I.O si va ixtiyoriy jami bali kiritiladi:
+        </p>
+        <textarea id="bulkTextarea" class="text-input" rows="8" placeholder="Abduazizova Ro’zigul 39
+Abdullaxayev Bunyod 29
+Abdullayev Ulug’bek 31
+Alijonov Javlonbek
+Baxtiyorov Umidjon"></textarea>
+        <p class="input-caption" style="margin-top: 6px;">
+          * Agar ball ko'rsatilgan bo'lsa, o'sha ball 5 ta bosqichga taqsimlanadi. Agar ko'rsatilmagan bo'lsa, avtomatik ball beriladi.
+        </p>
+      </div>
+      <div class="modal-footer-bar">
+        <button id="btnCancelBulk" class="btn btn-default" type="button">Bekor qilish</button>
+        <button id="btnSubmitBulk" class="btn btn-primary" type="button">Ro'yxatga kiritish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILDIRISHNOMA (TOAST) -->
+  <div id="toastNotification" class="toast-bar"></div>
+
+  <!-- Skriptlar -->
+  <script src="js/excel-export.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
